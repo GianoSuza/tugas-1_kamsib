@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, abort
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import text
 from flask_login import LoginManager, login_required, login_user, logout_user, UserMixin
@@ -86,15 +86,26 @@ def add_student():
     connection.close()
     return redirect(url_for('index'))
 
+#Kode sebelum
+#@app.route('/delete/<string:id>')
+#@login_required
+#def delete_student(id):
+    # RAW Query
+    #db.session.execute(text(f"DELETE FROM student WHERE id={id}"))
+    #db.session.commit()
+    #return redirect(url_for('index'))
 
-@app.route('/delete/<string:id>') 
+@app.route('/delete/<string:id>')
 @login_required
 def delete_student(id):
-    # RAW Query
-    db.session.execute(text(f"DELETE FROM student WHERE id={id}"))
+    # Validasi input id
+    if not id.isdigit():
+        abort(400, 'Invalid ID')
+
+    # Menggunakan parameterized query untuk menghindari sql injection
+    db.session.execute(text("DELETE FROM student WHERE id= :id"), {'id': id})
     db.session.commit()
     return redirect(url_for('index'))
-
 
 @app.route('/edit/<int:id>', methods=['GET', 'POST'])
 @login_required
@@ -124,5 +135,5 @@ if __name__ == '__main__':
             admin = User(username='admin', password='admin123')
             db.session.add(admin)
             db.session.commit()
-    app.run(host='0.0.0.0', port=5000, debug=True)
-
+    # Kode sebelum: app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=False) # Kode sesudah
